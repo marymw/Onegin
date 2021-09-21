@@ -16,7 +16,7 @@ struct MyString {
 void PrintGreetings();
 
 int ReadFromFile(char **buffer_ptr, char* NameOfFile);
-void DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr);
+int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr);
 int GetNumberOfStrings(char *buffer);
 void PrintFile(MyString* Index,int NumberOfStrings);
 void PrintSeparator();
@@ -26,6 +26,8 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 void swap(MyString *Index, int i, int j);
 void Myqsort(MyString *Index, int left, int right, int(*comparator)(const void *, const void *));
 int GetSizeOfFile(FILE* FilePtr);
+void FreeMemory(MyString ** Index_ptr, char **buffer_ptr);
+int DeleteEmptyStrings(char *buffer, int NumberOfSymbols);
 
 //int DeleteEmptyStrings(char *buffer, int NumberOfSymbols);
 
@@ -43,10 +45,10 @@ int main(int argc, char *argv[]) {
 		printf("распечатал буфер\n");
 	#endif
 
-	int NumberOfSymbols = ReadFromFile(&buffer, argv[1]);//записали весь файл в строку
-
+	int NumberOfSymbols = ReadFromFile(&buffer, argv[1]);//записали весь файл в строку, это без \0
+	//int NewNumberOfSymbols = DeleteEmptyStrings(buffer, NumberOfSymbols + 1);
 	#ifdef DEBAG
-		printf("Значение NumberOfSymbols равно = %d\n", NumberOfSymbols);
+		//printf("Значение NewNumberOfSymbols равно = %d\n", NewNumberOfSymbols);
 		if (buffer == nullptr)
 			printf("buffer в функции main после ReadFromFile содержит нулевой указатель\n");
 		if (buffer != nullptr) 
@@ -57,23 +59,14 @@ int main(int argc, char *argv[]) {
 		printf("распечатал буфер\n");
 	
 	#endif
-
-	//int NewNumberOfSymbols = DeleteEmptyStrings(buffer, NumberOfSymbols);
-	#ifdef DEBAG
-		printf("успешно миновал функцию DeleteEmptyStrings\n");
-		PrintBuffer(buffer);
-		printf("распечатал буфер\n");
-	#endif
-
 	
-	DecomposeToIndex(&Index, &buffer);//разложит всё в индекс из буфера 
+	int NumberOfStrings = DecomposeToIndex(&Index, &buffer);//разложит всё в индекс из буфера 
 
 	#ifdef DEBAG
 		printf("Я успешно миновал функцию DecomposeToIndex и вернулся в main\n");
-		
 	#endif
 
-	int NumberOfStrings = GetNumberOfStrings(buffer);
+	//int NumberOfStrings = GetNumberOfStrings(buffer);
 	#ifdef DEBAG
 		printf("Я успешно миновал функцию GetNumberOfStrings, получил значение NumberOfStrings = %d\n", NumberOfStrings);
 		printf("и нахожусь в main\n");
@@ -83,7 +76,7 @@ int main(int argc, char *argv[]) {
 		printf("распечатал буфер\n");
 	#endif
 
-	qsort(Index, NumberOfStrings - 1, sizeof(MyString), CompareByFirstLetters);//сортровка первого варианта, тут индекс должен быть указателем на первый элемент
+	qsort(Index, NumberOfStrings, sizeof(MyString), CompareByFirstLetters);//сортровка первого варианта, тут индекс должен быть указателем на первый элемент
 	
 	#ifdef DEBAG
 		printf("Я успешно миновал функцию qsort и вернулся в main\n");
@@ -117,8 +110,7 @@ int main(int argc, char *argv[]) {
 	//выводить
 	PrintSeparator();//печатает разделитель
 	PrintBuffer(buffer);//печатает исходный файл, можно попробовать модифицировать printfile()
-	free(Index);
-	free(buffer);
+	FreeMemory(&Index, &buffer);
 	#ifdef DEBAG
 		printf("Я всё. Тут мои полномочия всё.\n");
 	#endif
@@ -134,19 +126,20 @@ int CountSymbInfile(FILE* FilePtr){//берет поток ввода и счи�
 
 //норм, надо
 int ReadFromFile(char **buffer_ptr,char* NameOfFile){//читает из файла и записывает в буффер
+	//assert(NameOfFile);
 	#ifdef DEBAG
 		printf("Я в функции ReadFromFile\n");
 	#endif
 
 	FILE*  FilePtr = fopen(NameOfFile, "r");//вернёт null если не удалось открыть
-
+	
 	if (FilePtr == NULL) {						
 		printf("Error in funcion %s \n", __FUNCTION__);		//обработка ошибки
 		return -1;
 	}
 	
 	int NumberOfSymbols = 0;//nan нельзя??????
-	int SizeOfFile = GetSizeOfFile(FilePtr);
+	int SizeOfFile = GetSizeOfFile(FilePtr);//это без \0
 
 	#ifdef DEBAG
 		printf("я успешно миновал функцию GetSizeOfFile и нахожусь в функции ReadFromFile\n");
@@ -186,9 +179,9 @@ void PrintFile(MyString* Index,int NumberOfStrings){//печатает масс�
 		return;
 	}
 
-	for (int count = 0; count < NumberOfStrings; count++){ //печатаем пока не встретим /0
-		for(int NumberOrElemInString = 0; Index[count].PtrOnStartOfString[NumberOrElemInString] != '\n'; NumberOrElemInString++)
-		 printf("%c",Index[count].PtrOnStartOfString[NumberOrElemInString]);//было index[count]
+	for (int count = 0; count < NumberOfStrings - 1; count++){ //печатаем пока не встретим /0
+		for(int NumberOfElemInString = 0; Index[count].PtrOnStartOfString[NumberOfElemInString] != '\n'; NumberOfElemInString++)
+		 printf("%c",Index[count].PtrOnStartOfString[NumberOfElemInString]);//было index[count]
 
 		printf("\n");
 		
@@ -214,8 +207,8 @@ int GetSizeOfFile(FILE* FilePtr) {//определяеет размер файл
 
 //** ptr
 //разобраться с указателями, а так вроде ок, надо
-void DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежится по буферу и заполнит индекс
-	int NumberOfStrings = GetNumberOfStrings(*buffer_ptr);
+int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежится по буферу и заполнит индекс
+	int NumberOfStrings = GetNumberOfStrings(*buffer_ptr);//будет возвращать колво строк
 
 	#ifdef DEBAG
 		printf("Я нахожусь в DecomposeToIndex и успешно миновал функцию GetNumberOfStrings\n");
@@ -244,8 +237,8 @@ void DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежи�
 			else //для самой последней строки
 				(*Index_ptr)[ind_flag].LenOfString = *buffer_ptr + buf_flag + 1 - (*Index_ptr)[ind_flag].PtrOnStartOfString;
 		}
-		
 	}
+	return NumberOfStrings;
 }
 
 //ну норм,
@@ -432,7 +425,7 @@ void swap(MyString *Index, int i, int j) {
 	Index[i] = Index[j];
 	Index[j] = temp;
 }
-/*
+
 int DeleteEmptyStrings(char *buffer, int NumberOfSymbols){//убирает повторяющиеся \n
 	int old_num = 0;//пройдется по всему массиву буфер
 	int new_num = 0;//будет записывать только не повторяющиеся \n
@@ -464,5 +457,8 @@ int DeleteEmptyStrings(char *buffer, int NumberOfSymbols){//убирает по�
 	return new_num + 1;
 }
 
-*/
 
+void FreeMemory(MyString ** Index_ptr, char **buffer_ptr){//очищает память
+	free(*Index_ptr);
+	free(*buffer_ptr);
+}
