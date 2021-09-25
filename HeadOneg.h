@@ -5,6 +5,13 @@
 
 #define DEBUG 1
 
+#ifdef DEBUG
+#define DEBUG_PRINTF(string) printf(string)
+#define DEBUG_PRINTF_ONE_ARG(format,var) printf(format,var)
+#else
+#define DEBUG_PRINTF(string) printf("\n");
+#endif
+
 enum Errors {
 	NOERRORS,      //0
 	NOINPUTFILE,   //1
