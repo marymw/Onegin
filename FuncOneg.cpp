@@ -1,41 +1,30 @@
-#pragma once
-#include "HeadOneg.h"
+#include "NewOneg.h"
 
-//норм, надо
-int ReadFromFile(char **buffer_ptr,char* NameOfFile){//читает из файла и записывает в буффер
-	//assert(NameOfFile);
+void ReadFromFile(char **buffer_ptr,char* NameOfFile){//читает из файла и записывает в буффер
+	assert(NameOfFile);
 
-	#ifdef DEBAG
+	#ifdef DEBUG
 		printf("Я в функции ReadFromFile\n");
 	#endif
 
-	FILE* FilePtr = fopen(NameOfFile, "r");//вернёт null если не удалось открыть
-
-	if (FilePtr == NULL) {						
-		printf("Error in funcion %s \n", __FUNCTION__);		//обработка ошибки
-		return -1;
-	}
+	FILE*  FilePtr = fopen(NameOfFile, "r");//вернёт null если не удалось открыть
+	assert(FilePtr);
 	
-	int NumberOfSymbols = 0;//nan нельзя??????
+	
 	int SizeOfFile = GetSizeOfFile(FilePtr);//это без \0
 
-	#ifdef DEBAG
+	#ifdef DEBUG
 		printf("я успешно миновал функцию GetSizeOfFile и нахожусь в функции ReadFromFile\n");
 		printf("значение SizeOfFile = %d\n", SizeOfFile);
 	#endif
 
 	*buffer_ptr = (char *)calloc(SizeOfFile + 1, sizeof(char)); //выделяем память под буффер, + \0
-
-	if (*buffer_ptr == NULL) {
-		printf("Error in funcion %s \n", __FUNCTION__);
-		return -1;
-	}
+	assert(*buffer_ptr); 
 	
-	NumberOfSymbols = fread (*buffer_ptr, 1, SizeOfFile, FilePtr);
+	size_t StatusFread = fread (*buffer_ptr, 1, SizeOfFile, FilePtr);
+	assert(StatusFread == SizeOfFile);
 
-	if (NumberOfSymbols != SizeOfFile)
-		printf("Error in funcion %s \n", __FUNCTION__);
-
+	
 	(*buffer_ptr)[SizeOfFile] = '\0'; //положили \0 в конце массива буффер
 
 	#ifdef DEBUG 
@@ -43,22 +32,22 @@ int ReadFromFile(char **buffer_ptr,char* NameOfFile){//читает из фай�
 	#endif
 
 	fclose(FilePtr);
-
-	return NumberOfSymbols;//без \0
 }
 
-//норм, надо
-void PrintSeparator() {//печатает разделитель
-	printf("________________________________________________\n");
+void PrintSeparator(FILE *OutputFilePtr) {//печатает разделитель
+	fprintf(OutputFilePtr, "\n\n\n");
+	for (int i = 0; i < 4; i++){
+		for (int j = 0; j < 15; j++)
+			fprintf(OutputFilePtr, "*******");
+		fprintf(OutputFilePtr, "\n");
+	}
+	
 }
 
-//вроде норм, надо
 void PrintFile(MyString* Index,int NumberOfStrings){//печатает массив Index, index это массив структур
-
 	#ifdef DEBUG
 		printf("начала работу функция PrintFile\n");
 	#endif
-
 	if (Index == nullptr){
 		printf("index is empty.\n");
 		return;
@@ -71,21 +60,19 @@ void PrintFile(MyString* Index,int NumberOfStrings){//печатает масс�
 		printf("\n");
 		
 	}
-
 	#ifdef DEBUG
 		printf("завершила работу функция PrintFile\n");
 	#endif
 }
 
-//читаем до /0, заносим строку в отдельный массив буфер, так до конца файла, адресы начала строк записываем в индекс
-//норм, надо
+
 void PrintGreetings() { //печатает приветствие программы
+
 	printf("This program sorts lines of text\n\n");
 }
 
-//норм
-int GetSizeOfFile(FILE* FilePtr) {//определяеет размер файла
 
+int GetSizeOfFile(FILE* FilePtr) {//определяеет размер файла
 	fseek(FilePtr, 0, SEEK_END);//устанавливает индикатор на конец файла
 	int SizeOfFile = ftell(FilePtr);//количество байтов, которые отделяют индикатор от начала файла
 	rewind (FilePtr);//устанавливает индикатор обратно на начало файла
@@ -93,12 +80,11 @@ int GetSizeOfFile(FILE* FilePtr) {//определяеет размер файл
 	return SizeOfFile;//это без \0 на конце
 }
 
-//** ptr
-//разобраться с указателями, а так вроде ок, надо
+
 int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежится по буферу и заполнит индекс
 	int NumberOfStrings = GetNumberOfStrings(*buffer_ptr);//будет возвращать колво строк
 
-	#ifdef DEBAG
+	#ifdef DEBUG
 		printf("Я нахожусь в DecomposeToIndex и успешно миновал функцию GetNumberOfStrings\n");
 		printf("NumberOfStrings = %d\n", NumberOfStrings);
 	#endif
@@ -106,11 +92,11 @@ int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежит
 	*Index_ptr = (MyString *)calloc(NumberOfStrings, sizeof(MyString));
 
 	assert((*Index_ptr) != nullptr);
-
 	int ind_flag = 0;//индекс, будет бежать по массиву индекс
 
 	//тут точно верно звёздочки расположила??
 	(*Index_ptr)[ind_flag].PtrOnStartOfString = *buffer_ptr;//в первый положили указатель на начало буффера
+
 	int buf_flag = 0;
 
 	for (buf_flag = 0;((*buffer_ptr)[buf_flag]) != '\0'; buf_flag++){//пройтись по всему буферу
@@ -133,11 +119,15 @@ int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){//пробежит
 		}
 	}
 
+	printf("буффер: адрес начала = %p\n", *buffer_ptr);
+
+	for (int i = 0; i < NumberOfStrings; i++){
+		printf("строка номер %d : адрес начала = %p, длина %zu\n", i, (*Index_ptr)[i].PtrOnStartOfString, (*Index_ptr)[i].LenOfString);
+	}
 	return NumberOfStrings;
 }
 
-//ну норм,
-int GetNumberOfStrings(char *buffer){ //определяет сколько строк в буфере
+int GetNumberOfStrings(char *buffer){ //определяет сколько ненулевых строк в буфере
 
 	#ifdef DEBAG
 		printf("1)Запущена функция GetNumberOfStrings\n");
@@ -161,7 +151,7 @@ int GetNumberOfStrings(char *buffer){ //определяет сколько ст
 		
 	for (int count = 0; buffer[count] != '\0'; count++){
 	
-		if (buffer[count] == '\n')//нам вообще /0 нельзя использовать??
+		if (buffer[count] == '\n' && buffer[count + 1] != '\n')//нам вообще /0 нельзя использовать??
 			NumberOfStrings++;//подряд идущие \т тоже строки
 	}
 
@@ -175,17 +165,16 @@ int GetNumberOfStrings(char *buffer){ //определяет сколько ст
 } 
 
 
-//65 66 вроде норм, надо
-int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVoid){//компараторы
 
-	#ifdef DEBAG
+int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVoid){//компараторы
+	#ifdef DEBUG
 		printf("начала работать функция CompareByFirstLetters\n");
 	#endif
 
 	const MyString *OneString     = (MyString *)OneStringVoid;		//привели к типу, чтобы можно было работать
 	const MyString *AnotherString = (MyString *)AnotherStringVoid;
 
-	#ifdef DEBAG
+	#ifdef DEBUG
 		printf("1) работает функция CompareByFirstLetters\n");
 	#endif
 
@@ -193,7 +182,7 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 	if (OneString->PtrOnStartOfString == nullptr)
 		printf("Error in funcion %s \n", __FUNCTION__);
 
-	#ifdef DEBAG
+	#ifdef DEBUG
 		printf("2) работает функция CompareByFirstLetters\n");
 	#endif
 
@@ -211,17 +200,17 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 	for (; OneStringElement < OneString->LenOfString && AnotherStringElement < AnotherString->LenOfString; OneStringElement++, AnotherStringElement++){
 		//в обоих строках пропускаем знаки пунктуации и цифры
 		while (ispunct(*(OneString->PtrOnStartOfString + OneStringElement))   || 
-		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement))){
+		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement)) || 
+		  	   *(OneString->PtrOnStartOfString + OneStringElement) == '«'){
 
 			OneStringElement++;
 		}
-
 		while(ispunct(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement))){
+		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
+		  	  *(AnotherString->PtrOnStartOfString + AnotherStringElement) == '«'){
 
 			AnotherStringElement++;
 		}
-
 		//если не равны, то вернем разницу в Int
 		if( (*(OneString    ->PtrOnStartOfString + OneStringElement    )) != 
 			(*(AnotherString->PtrOnStartOfString + AnotherStringElement)))
@@ -258,19 +247,21 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 	if (AnotherString->PtrOnStartOfString == nullptr)
 		printf("Error in funcion %s \n", __FUNCTION__);
 
-	int OneStringElement     = OneString    ->LenOfString - 1; //будет ходить по первой строке c конца
-	int AnotherStringElement = AnotherString->LenOfString - 1; //будет ходить по второй строке с конца
+	int OneStringElement     = OneString    ->LenOfString - 1 ; //будет ходить по первой строке c конца
+	int AnotherStringElement = AnotherString->LenOfString - 1 ; //будет ходить по второй строке с конца
 
 //цикл пока не дойдёем до начала строки
 	for (; OneStringElement > 0 && AnotherStringElement > 0; --OneStringElement, --AnotherStringElement){
-		//в обоих строках пропускаем знаки пунктуации и цифры
+		//в обоих строках пропускаем знаки пунктуации и цифры иии всякие лишние /n
 		while (ispunct(*(OneString->PtrOnStartOfString + OneStringElement))   || 
-		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement))){
+		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement))   ||
+		  	          (*(OneString->PtrOnStartOfString + OneStringElement) == '\n') ){
 
 			OneStringElement--;
 		}
 		while(ispunct(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement))){
+		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
+		  	  		 (*(AnotherString->PtrOnStartOfString + AnotherStringElement) == '\n')){
 
 			AnotherStringElement--;
 		}
@@ -292,18 +283,16 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 
 //норм мейби
 void PrintBuffer(char *buffer){//печатает буффер
-
 	if (buffer == nullptr){
 		printf("buffer is empty.\n");
 		return;
 	}
-
 	printf("%s\n", buffer);
 }
 
 
 void Myqsort(MyString *Index, int left, int right, int(*comparator)(const void *,const void *)){
-	int i, last;
+	int i = 0, last = 0;
 	//void swap(void *v[], int i, int j);
 
 	if (left >= right)//если из одного элемента
@@ -314,51 +303,96 @@ void Myqsort(MyString *Index, int left, int right, int(*comparator)(const void *
 		if ( ( (*comparator)((void *)&Index[i],(void *)&Index[left]) ) < 0 )
 			swap(Index, ++last, i);
 	swap(Index, left, last);
-	Myqsort(Index, left, last-1, comparator);
+	Myqsort(Index, left, last - 1, comparator);
 	Myqsort(Index, last + 1, right, comparator);
 }
-
+//const
 void swap(MyString *Index, int i, int j) {
-	MyString temp;
+	MyString temp = {};
 
 	temp = Index[i];
 	Index[i] = Index[j];
 	Index[j] = temp;
 }
 
-int DeleteEmptyStrings(char *buffer, int NumberOfSymbols){//убирает повторяющиеся \n
-	int old_num = 0;//пройдется по всему массиву буфер
-	int new_num = 0;//будет записывать только не повторяющиеся \n
-	#ifdef DEBAG
-		printf("NumberOfSymbols in func DeleteEmptyStrings = %d\n", NumberOfSymbols);
-	#endif
-	while( old_num < NumberOfSymbols - 1){
-		if (buffer[old_num] != '\n'){
-			char tmp = buffer[old_num];
-			buffer[new_num] = tmp;
-			//buffer[new_num] = buffer[old_num];
-			old_num++;
-			new_num++;
-		} 
-		else if (buffer[old_num] == '\n' && buffer[old_num + 1] == '\n' ){
-			old_num++;
-		}
-		else {
-			//buffer[new_num] = buffer[old_num];
-			char tmp = buffer[old_num];
-			buffer[new_num] = tmp;
-			old_num++;
-			new_num++;
 
-		}
+void PrintToFile(FILE*  OutputFilePtr, MyString *Index, int NumberOfStrings){//печатает индекс в файл
+	assert(Index);
+/*
+	for (int count = 0; count < NumberOfStrings; count++){ //печатаем пока не встретим /0
+		for(int NumberOfElemInString = 0; Index[count].PtrOnStartOfString[NumberOfElemInString] != '\n'; NumberOfElemInString++)
+		 fprintf(OutputFilePtr, "%c",Index[count].PtrOnStartOfString[NumberOfElemInString]);//было index[count]
+//fwrite fputsn
+		fprintf(OutputFilePtr, "\n");	
+	}
+
+*/
+//норм работает
+//если это заканчивается не \0
+	for (int count = 0; count < NumberOfStrings; count++){
+		size_t StatusOfFwrite = fwrite(Index[count].PtrOnStartOfString, sizeof(char), Index[count].LenOfString, OutputFilePtr);
+		if (StatusOfFwrite != Index[count].LenOfString)
+			printf("Error in funcion %s\n", __FUNCTION__);
 
 	}
-	buffer[new_num] == '\0';
-	return new_num + 1;
+		/*
+	for (int count = 0; count < NumberOfStrings; count++){
+		size_t StatusOfFputs = fputs(Index[count].PtrOnStartOfString, OutputFilePtr);
+		if (StatusOfFputs != NumberOfStrings)
+			printf("Error in funcion %s\n", __FUNCTION__);
+	}
+	*/
+	
 }
 
+FILE* OpenOutputFile(char* NameOfOutputFile){//открывает файл для записи
+	FILE*  OutputFilePtr = fopen(NameOfOutputFile, "w");//вернёт null если не удалось открыть
+	assert(OutputFilePtr);
 
-void FreeMemory(MyString ** Index_ptr, char **buffer_ptr){//очищает память
-	free(*Index_ptr);
-	free(*buffer_ptr);
+
+	return OutputFilePtr;
+}
+
+void PrintGoodBye(){
+	printf("Я всё. Тут мои полномочия всё.\n");
+}
+
+void PrintBufferToFile(FILE*  OutputFilePtr, char *buffer){
+	if (buffer == nullptr){
+		printf("buffer is empty.\n");
+		return;
+	}
+
+	fprintf(OutputFilePtr, "%s\n", buffer);
+}
+
+int CloseOutputFile(FILE*  OutputFilePtr){
+	int StatusOfCloseFile = fclose(OutputFilePtr);
+
+	if (StatusOfCloseFile != 0){
+		printf("Ошибка закрытия файла\n");
+		return StatusOfCloseFile;
+	}
+	return StatusOfCloseFile;
+}
+	
+
+int ArgCheck(int argc){
+
+	switch (argc){
+		case 1:
+			printf("Ошибка ввода файлов ввода и вывода. Проверьте наличие файлов для ввода и вывода\n");
+			return NOINPUTFILE;
+		case 2:
+			printf("Ошибка вывода. Проверьте наличие файла вывода.\n");
+			return NOOUTPUTFILE;
+		case 3:
+			printf("Всё прекрасно!\n");
+			return NOERRORS;
+		default:
+			printf("Too many arguments!\n");
+			return TOOMANYARGS;
+	}
+
+	return 0;
 }
