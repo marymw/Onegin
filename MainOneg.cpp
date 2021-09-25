@@ -1,90 +1,46 @@
-#include "HeadOneg.h"
+#include "NewOneg.h"
+
 int main(int argc, char *argv[]) {
 
+	int StatusArgCheck = ArgCheck(argc);
+	assert(StatusArgCheck == 0);
+	
 	PrintGreetings();//печатаем приветствие
 	
 	MyString *Index  = nullptr;//пока не знаем размер массива структур
 	char     *buffer = nullptr;//будем читать туда файл
 
-	#ifdef DEBAG
-		printf("%s\n", argv[1]);
-		PrintBuffer(buffer);
-		printf("распечатал буфер\n");
-	#endif
+	
+	char *INPUT_FILE = argv[1];
+	char *OUTPUT_FILE = argv[2];
 
-	int NumberOfSymbols = ReadFromFile(&buffer, argv[1]);//записали весь файл в строку, это без \0
-
-	//int NewNumberOfSymbols = DeleteEmptyStrings(buffer, NumberOfSymbols + 1);
-
-	#ifdef DEBAG
-		//printf("Значение NewNumberOfSymbols равно = %d\n", NewNumberOfSymbols);
-		if (buffer == nullptr)
-			printf("buffer в функции main после ReadFromFile содержит нулевой указатель\n");
-		if (buffer != nullptr) 
-			printf("buffer в функции main после ReadFromFile содержит ненулевой указатель\n");
-		printf("Я успешно миновал функцию ReadFromFile и вернулся в main\n");
-
-		PrintBuffer(buffer);
-		printf("распечатал буфер\n");
-	#endif
+	ReadFromFile(&buffer, INPUT_FILE);//записали весь файл в строку, это без \0
+	assert(buffer);
 	
 	int NumberOfStrings = DecomposeToIndex(&Index, &buffer);//разложит всё в индекс из буфера 
 
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию DecomposeToIndex и вернулся в main\n");
-	#endif
-
-	//int NumberOfStrings = GetNumberOfStrings(buffer);
-
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию GetNumberOfStrings, получил значение NumberOfStrings = %d\n", NumberOfStrings);
-		printf("и нахожусь в main\n");
-		PrintFile(Index, NumberOfStrings);//печатает файл(с помощью индекса)
-		printf("распечатал файл до сортировки \n");
-		PrintBuffer(buffer);
-		printf("распечатал буфер\n");
-	#endif
-
 	qsort(Index, NumberOfStrings, sizeof(MyString), CompareByFirstLetters);//сортровка первого варианта, тут индекс должен быть указателем на первый элемент
-	
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию qsort и вернулся в main\n");
-	#endif
 
-	PrintFile(Index, NumberOfStrings);//печатает файл(с помощью индекса)
+	FILE *OutputFilePtr = OpenOutputFile(OUTPUT_FILE);
 
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию PrintFile, распечатал текст и вернулся в main\n");
-	#endif
-	
-	PrintSeparator();//печатает разделитель
-	
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию PrintSeparator и вернулся в main\n");
-	#endif
+	PrintSeparator(OutputFilePtr);//печатает разделитель
+	PrintToFile(OutputFilePtr, Index, NumberOfStrings);//печатает файл(с помощью индекса
+	PrintSeparator(OutputFilePtr);//печатает разделитель
 	
 	Myqsort(Index, 0, NumberOfStrings - 1, CompareByLastLetters);//сортировка второго варианта
 
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию Myqsort и вернулся в main\n");
-	#endif
+	PrintToFile(OutputFilePtr, Index, NumberOfStrings);//печатает файл
+	PrintSeparator(OutputFilePtr);//печатает разделитель
+	PrintBufferToFile (OutputFilePtr, buffer);//печатает исходный файл, можно попробовать модифицировать printfile()
+	PrintSeparator(OutputFilePtr);//печатает разделитель
 
-	PrintFile(Index, NumberOfStrings);//печатает файл
+	free(Index);
+	free(buffer);
 
-	#ifdef DEBAG
-		printf("Я успешно миновал функцию PrintFile, распечатал текст и вернулся в main\n");
-	#endif
-
-	//выводить
-	PrintSeparator();//печатает разделитель
-
-	PrintBuffer(buffer);//печатает исходный файл, можно попробовать модифицировать printfile()
-
-	FreeMemory(&Index, &buffer);
-
-	#ifdef DEBAG
-		printf("Я всё. Тут мои полномочия всё.\n");
-	#endif
-
+    int StatusOfCloseFile = CloseOutputFile(OutputFilePtr);
+    assert(StatusOfCloseFile == 0);
+	
+	PrintGoodBye();
+	
 	return 0;
 }
