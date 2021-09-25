@@ -195,10 +195,14 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 
 			OneStringElement++;
 		}
+		IsLeftQuotes(OneString, &OneStringElement);
+
 		while(IsUnnecessarySymbolForCBFL(AnotherString, AnotherStringElement)){
 
 			AnotherStringElement++;
 		}
+
+		IsLeftQuotes(AnotherString, &AnotherStringElement);
 		//если не равны, то вернем разницу в Int
 		if((*(OneString    ->PtrOnStartOfString + OneStringElement    )) != 
 		   (*(AnotherString->PtrOnStartOfString + AnotherStringElement)))
@@ -232,21 +236,15 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 	int OneStringElement     = OneString    ->LenOfString - 1 ;     //будет ходить по первой строке c конца
 	int AnotherStringElement = AnotherString->LenOfString - 1 ;     //будет ходить по второй строке с конца
 
-//цикл пока не дойдёем до начала строки
+    //цикл пока не дойдёем до начала строки
 	for (; OneStringElement > 0 && AnotherStringElement > 0; --OneStringElement, --AnotherStringElement){
 		//в обоих строках пропускаем знаки пунктуации и цифры иии всякие лишние /n
-		while (ispunct(*(OneString->PtrOnStartOfString + OneStringElement))   || 
-		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement))   ||
-		  	          (*(OneString->PtrOnStartOfString + OneStringElement) == '\n') ){
-
+		while (IsUnnecessarySymbolForCBLL(OneString, OneStringElement))
 			OneStringElement--;
-		}
-		while(ispunct(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  		 (*(AnotherString->PtrOnStartOfString + AnotherStringElement) == '\n')){
 
+		while(IsUnnecessarySymbolForCBLL(AnotherString, AnotherStringElement))
 			AnotherStringElement--;
-		}
+		
 		//если не равны, то вернем разницу в Int
 		if( (*(OneString    ->PtrOnStartOfString + OneStringElement)) != 
 			(*(AnotherString->PtrOnStartOfString + AnotherStringElement)))
@@ -384,10 +382,29 @@ int ArgCheck(int argc){
 bool IsUnnecessarySymbolForCBFL(const MyString *SomeString, const int SomeStringElement){
 
 	if (ispunct(*(SomeString->PtrOnStartOfString + SomeStringElement)) || 
-		isdigit(*(SomeString->PtrOnStartOfString + SomeStringElement)) || 
-		   (int)*(SomeString->PtrOnStartOfString + SomeStringElement)   == -85)
+		isdigit(*(SomeString->PtrOnStartOfString + SomeStringElement)) ||
+			   (*(SomeString->PtrOnStartOfString + SomeStringElement)   == ' ') ||
+		        ((unsigned char)*(SomeString->PtrOnStartOfString + SomeStringElement)   == 171))
 		return true;
 
 	return false;
+
+}
+
+bool IsUnnecessarySymbolForCBLL(const MyString *SomeString, const int SomeStringElement){
+
+	if (ispunct(*(SomeString->PtrOnStartOfString + SomeStringElement)) || 
+		isdigit(*(SomeString->PtrOnStartOfString + SomeStringElement)) ||
+		  	   (*(SomeString->PtrOnStartOfString + SomeStringElement) == '\n') )
+		return true;
+
+	return false;
+
+}
+
+void IsLeftQuotes(const MyString *SomeString, int *SomeStringElement){
+	if ((*(SomeString->PtrOnStartOfString + *SomeStringElement) ==  0xffffffc2) && 
+		(*(SomeString->PtrOnStartOfString + *SomeStringElement + 1) == 0xffffffab ) )
+		*SomeStringElement += 2;
 
 }
