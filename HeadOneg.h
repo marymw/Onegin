@@ -42,7 +42,9 @@ void  swap                 		(MyString *Index, const int i, const int j);
 void  Myqsort              		(MyString *Index, int left, int right, int(*comparator)(const void *, const void *));
 void  PrintGoodBye         		();
 void  PrintBufferToFile    		(FILE*  OutputFilePtr, const char *buffer);
+void  IsLeftQuotes              (const MyString *SomeString,int* SomeStringElement);
 void  PrintToFile          		(FILE*  OutputFilePtr, MyString *Index, const int NumberOfStrings);
 FILE *OpenOutputFile       		(char* NameOfOutputFile);
 bool  IsUnnecessarySymbolForCBFL(const MyString *SomeString, const int SomeStringElement);
+bool  IsUnnecessarySymbolForCBLL(const MyString *SomeString, const int SomeStringElement);
 
