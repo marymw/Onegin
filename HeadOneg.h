@@ -1,7 +1,9 @@
+/* ЕВГЕНИЙ ОНЕГИН */
+
+#include <string.h>
 #include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #define DEBUG 1
 
@@ -19,9 +21,6 @@ enum Errors {
 	TOOMANYARGS    //3
 };
 
-
-/* ЕВГЕНИЙ ОНЕГИН */
-
 struct MyString {
 	char   *PtrOnStartOfString;
 	size_t         LenOfString;
@@ -29,16 +28,16 @@ struct MyString {
 
 void  PrintGreetings       ();
 void  ReadFromFile         (char **buffer_ptr, char* NameOfFile);
-void  PrintFile            (MyString* Index,int NumberOfStrings);
+void  PrintFile            (MyString* Index, const int NumberOfStrings);
 void  PrintSeparator       (FILE *OutputFilePtr);
-void  PrintBuffer          (char *buffer);
-void  swap                 (MyString *Index, int i, int j);
+void  PrintBuffer          (const char *buffer);
+void  swap                 (MyString *Index, const int i, const int j);
 void  Myqsort              (MyString *Index, int left, int right, int(*comparator)(const void *, const void *));
 void  PrintGoodBye         ();
-void  PrintBufferToFile    (FILE*  OutputFilePtr, char *buffer);
-void  PrintToFile          (FILE*  OutputFilePtr, MyString *Index, int NumberOfStrings);
+void  PrintBufferToFile    (FILE*  OutputFilePtr, const char *buffer);
+void  PrintToFile          (FILE*  OutputFilePtr, MyString *Index, const int NumberOfStrings);
 int   DecomposeToIndex     (MyString** Index_ptr, char **buffer_ptr);
-int   GetNumberOfStrings   (char *buffer);
+int   GetNumberOfStrings   (const char *buffer);
 int   CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVoid);
 int   CompareByLastLetters (const void* OneStringVoid, const void* AnotherStringVoid);
 int   GetSizeOfFile        (FILE* FilePtr);
