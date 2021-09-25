@@ -12,7 +12,8 @@ void ReadFromFile(char **buffer_ptr, char* NameOfFile){			//читает из ф
 	
 	int SizeOfFile = GetSizeOfFile(FilePtr);		    		//это без \0
 
-	DEBUG_PRINTF        ("я успешно миновал функцию GetSizeOfFile и нахожусь в функции ReadFromFile\n");
+	DEBUG_PRINTF        ("я успешно миновал функцию GetSizeOfFile и ");
+	DEBUG_PRINTF        ("нахожусь в функции ReadFromFile\n");
 	DEBUG_PRINTF_ONE_ARG("значение SizeOfFile = %d\n", SizeOfFile);
 
 	*buffer_ptr = (char *)calloc(SizeOfFile + 1, sizeof(char)); //выделяем память под буффер, + \0
@@ -40,7 +41,7 @@ void PrintSeparator(FILE *OutputFilePtr){						//печатает раздели
 	}
 }
 
-void PrintFile(MyString* Index, const int NumberOfStrings){			//печатает массив Index, index это массив структур
+void PrintFile(MyString* Index, const int NumberOfStrings){		//печатает массив Index, index это массив структур
 
 	DEBUG_PRINTF("начала работу функция PrintFile\n");
 
@@ -49,22 +50,22 @@ void PrintFile(MyString* Index, const int NumberOfStrings){			//печатает
 		return;
 	}
 
-	for (int count = 0; count < NumberOfStrings; count++){ 		//печатаем пока не встретим /0
+	for (int count = 0; count < NumberOfStrings; count++){
 
-		for(int NumberOfElemInString = 0; 
-			Index[count].PtrOnStartOfString[NumberOfElemInString] != '\n'; 
-			NumberOfElemInString++)
-//ЗАМЕНА НА ФРАЙТ
-			printf("%c",Index[count].PtrOnStartOfString[NumberOfElemInString]);//было index[count]
+		size_t StatusOfFwrite = fwrite(Index[count].PtrOnStartOfString,
+														  sizeof(char), 
+											  Index[count].LenOfString, 
+											                    stdout);
 
-		printf("\n");
-		
+		if (StatusOfFwrite != Index[count].LenOfString)
+			printf("Error in funcion %s\n", __FUNCTION__);
 	}
+
 		DEBUG_PRINTF("завершила работу функция PrintFile\n");
 }
 
 
-void PrintGreetings() {											 //печатает приветствие программы
+void PrintGreetings() {											//печатает приветствие программы
 
 	printf("This program sorts lines of text\n\n");
 }
@@ -107,13 +108,18 @@ int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){	//пробежи�
 
 			if ((*buffer_ptr)[buf_flag + 1] != '\0'){
 
-				(*Index_ptr)[ind_flag + 1].PtrOnStartOfString = *buffer_ptr + buf_flag + 1;//положили указатель на начало следующей строки в следующий элеент индекса
-				(*Index_ptr)[ind_flag].LenOfString = (*Index_ptr)[ind_flag + 1].PtrOnStartOfString - (*Index_ptr)[ind_flag].PtrOnStartOfString;//длина строки как разность указателей на начала строк
-				ind_flag++;//можно потом засунуть в условие цикла
+				//положили указатель на начало следующей строки в следующий элеент индекса
+				(*Index_ptr)[ind_flag + 1].PtrOnStartOfString = *buffer_ptr + buf_flag + 1;
+				//длина строки как разность указателей на начала строк
+				(*Index_ptr)[ind_flag].LenOfString = (*Index_ptr)[ind_flag + 1].PtrOnStartOfString - 
+				   									 (*Index_ptr)[ind_flag].PtrOnStartOfString;
+
+				ind_flag++;
 			}
 
 			else //для самой последней строки
-				(*Index_ptr)[ind_flag].LenOfString = *buffer_ptr + buf_flag + 1 - (*Index_ptr)[ind_flag].PtrOnStartOfString;
+				(*Index_ptr)[ind_flag].LenOfString = *buffer_ptr + buf_flag + 1 - 
+													(*Index_ptr)[ind_flag].PtrOnStartOfString;
 		}
 	}
 
@@ -121,14 +127,15 @@ int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){	//пробежи�
 		printf("буффер: адрес начала = %p\n", *buffer_ptr);
 
 		for (int i = 0; i < NumberOfStrings; i++){
-			printf("строка номер %d : адрес начала = %p, длина %zu\n", i, (*Index_ptr)[i].PtrOnStartOfString, (*Index_ptr)[i].LenOfString);
+			printf("строка номер %d : адрес начала = %p, длина %zu\n", i, (*Index_ptr)[i].PtrOnStartOfString,
+																	      (*Index_ptr)[i].LenOfString);
 		}
 	#endif
 
 	return NumberOfStrings;
 }
 
-int GetNumberOfStrings(const char *buffer){ //определяет сколько ненулевых строк в буфере
+int GetNumberOfStrings(const char *buffer){ 							//кол-во ненулевых строк в буфере
 
 	DEBUG_PRINTF("1)Запущена функция GetNumberOfStrings\n");
 
@@ -146,7 +153,7 @@ int GetNumberOfStrings(const char *buffer){ //определяет скольк�
 		
 	for (int count = 0; buffer[count] != '\0'; count++){
 	
-		if (buffer[count] == '\n' && buffer[count + 1] != '\n')//нам вообще /0 нельзя использовать??
+		if (buffer[count] == '\n' && buffer[count + 1] != '\n')
 			NumberOfStrings++;//подряд идущие \т тоже строки
 	}
 
@@ -162,12 +169,11 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 
 	DEBUG_PRINTF("начала работать функция CompareByFirstLetters\n");
 
-	const MyString *OneString     = (MyString *)OneStringVoid;		//привели к типу, чтобы можно было работать
+	const MyString *OneString     = (MyString *)OneStringVoid;						//привели к типу
 	const MyString *AnotherString = (MyString *)AnotherStringVoid;
 
 	DEBUG_PRINTF("1) работает функция CompareByFirstLetters\n");
 
-	//проверить, не пустые ли это строки
 	if (OneString->PtrOnStartOfString == nullptr)
 		printf("Error in funcion %s \n", __FUNCTION__);
 
@@ -178,27 +184,24 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 
 	DEBUG_PRINTF("3) работает функция CompareByFirstLetters\n");
 	
-	int OneStringElement     = 0;// будет ходить по первой строке
-	int AnotherStringElement = 0; //будет ходить по второй строке
+	int OneStringElement     = 0; 													 // будет ходить по первой строке
+	int AnotherStringElement = 0; 													 //будет ходить по второй строке
 
     //цикл пока не дойдёем до конца строки
-	for (; OneStringElement < OneString->LenOfString && AnotherStringElement < AnotherString->LenOfString; OneStringElement++, AnotherStringElement++){
+	for (; OneStringElement < OneString->LenOfString && AnotherStringElement < AnotherString->LenOfString;
+													           OneStringElement++, AnotherStringElement++){
 		//в обоих строках пропускаем знаки пунктуации и цифры
-		while (ispunct(*(OneString->PtrOnStartOfString + OneStringElement))   || 
-		  	   isdigit(*(OneString->PtrOnStartOfString + OneStringElement)) || 
-		  	   (int)*(OneString->PtrOnStartOfString + OneStringElement) == -85){
+		while(IsUnnecessarySymbolForCBFL(OneString, OneStringElement)){
 
 			OneStringElement++;
 		}
-		while(ispunct(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  isdigit(*(AnotherString->PtrOnStartOfString + AnotherStringElement)) ||
-		  	  (int)*(AnotherString->PtrOnStartOfString + AnotherStringElement) == -85){
+		while(IsUnnecessarySymbolForCBFL(AnotherString, AnotherStringElement)){
 
 			AnotherStringElement++;
 		}
 		//если не равны, то вернем разницу в Int
-		if( (*(OneString    ->PtrOnStartOfString + OneStringElement    )) != 
-			(*(AnotherString->PtrOnStartOfString + AnotherStringElement)))
+		if((*(OneString    ->PtrOnStartOfString + OneStringElement    )) != 
+		   (*(AnotherString->PtrOnStartOfString + AnotherStringElement)))
 
 			return (int)(*(OneString    ->PtrOnStartOfString + OneStringElement)) - 
 		           (int)(*(AnotherString->PtrOnStartOfString + AnotherStringElement));
@@ -216,19 +219,18 @@ int CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVo
 
 int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoid){
 
-	const MyString *OneString     = (MyString *)OneStringVoid;			//приводим к типу, чтобы можно было работать
+	const MyString *OneString     = (MyString *)OneStringVoid;		//приводим к типу
 	const MyString *AnotherString = (MyString *)AnotherStringVoid;
 
 	DEBUG_PRINTF("CompareByLastLetters\n");
 
-	//проверить, не пустые ли это строки
 	if (OneString->PtrOnStartOfString == nullptr)
 		printf("Error in funcion %s \n", __FUNCTION__);
 	if (AnotherString->PtrOnStartOfString == nullptr)
 		printf("Error in funcion %s \n", __FUNCTION__);
 
-	int OneStringElement     = OneString    ->LenOfString - 1 ; //будет ходить по первой строке c конца
-	int AnotherStringElement = AnotherString->LenOfString - 1 ; //будет ходить по второй строке с конца
+	int OneStringElement     = OneString    ->LenOfString - 1 ;     //будет ходить по первой строке c конца
+	int AnotherStringElement = AnotherString->LenOfString - 1 ;     //будет ходить по второй строке с конца
 
 //цикл пока не дойдёем до начала строки
 	for (; OneStringElement > 0 && AnotherStringElement > 0; --OneStringElement, --AnotherStringElement){
@@ -260,12 +262,13 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 
 }
 
-void PrintBuffer(const char *buffer){//печатает буффер в терминал
+void PrintBuffer(const char *buffer){									//печатает буффер в терминал
 
 	if (buffer == nullptr){
 		printf("buffer is empty.\n");
 		return;
 	}
+
 	printf("%s\n", buffer);
 }
 
@@ -274,19 +277,25 @@ void Myqsort(MyString *Index, int left, int right, int(*comparator)(const void *
 
 	int i = 0, last = 0;
 
-	if (left >= right)//если из одного элемента
+	if (left >= right)													//если из одного элемента
 		return;
+
 	swap(Index, left, (left+right)/2);
+
 	last = left;
+
 	for (i = left + 1; i <= right; i++)
 		if ( ( (*comparator)((void *)&Index[i],(void *)&Index[left]) ) < 0 )
 			swap(Index, ++last, i);
+
 	swap(Index, left, last);
+
 	Myqsort(Index, left, last - 1, comparator);
 	Myqsort(Index, last + 1, right, comparator);
 }
-//const
+
 void swap(MyString *Index, const int i, const int j) {
+
 	MyString temp = {};
 
 	temp = Index[i];
@@ -295,12 +304,18 @@ void swap(MyString *Index, const int i, const int j) {
 }
 
 
-void PrintToFile(FILE*  OutputFilePtr, MyString *Index, const int NumberOfStrings){//печатает индекс в файл
+void PrintToFile(FILE*  OutputFilePtr, MyString *Index, 
+                             const int NumberOfStrings){					//печатает индекс в файл
 
 	assert(Index);
 
 	for (int count = 0; count < NumberOfStrings; count++){
-		size_t StatusOfFwrite = fwrite(Index[count].PtrOnStartOfString, sizeof(char), Index[count].LenOfString, OutputFilePtr);
+
+		size_t StatusOfFwrite = fwrite(Index[count].PtrOnStartOfString,
+														  sizeof(char), 
+											  Index[count].LenOfString, 
+											             OutputFilePtr);
+
 		if (StatusOfFwrite != Index[count].LenOfString)
 			printf("Error in funcion %s\n", __FUNCTION__);
 
@@ -310,17 +325,20 @@ void PrintToFile(FILE*  OutputFilePtr, MyString *Index, const int NumberOfString
 
 FILE* OpenOutputFile(char* NameOfOutputFile){//открывает файл для записи
 
-	FILE*  OutputFilePtr = fopen(NameOfOutputFile, "w");//вернёт null если не удалось открыть
+	FILE*  OutputFilePtr = fopen(NameOfOutputFile, "w");					//вернёт null если не удалось открыть
 	assert(OutputFilePtr);
 
 	return OutputFilePtr;
 }
 
+
 void PrintGoodBye(){
 	printf("Я всё. Тут мои полномочия всё.\n");
 }
 
+
 void PrintBufferToFile(FILE*  OutputFilePtr, const char *buffer){
+
 	if (buffer == nullptr){
 		printf("buffer is empty.\n");
 		return;
@@ -329,13 +347,16 @@ void PrintBufferToFile(FILE*  OutputFilePtr, const char *buffer){
 	fprintf(OutputFilePtr, "%s\n", buffer);
 }
 
+
 int CloseOutputFile(FILE*  OutputFilePtr){
+
 	int StatusOfCloseFile = fclose(OutputFilePtr);
 
 	if (StatusOfCloseFile != 0){
 		printf("Ошибка закрытия файла\n");
 		return StatusOfCloseFile;
 	}
+
 	return StatusOfCloseFile;
 }
 	
@@ -358,4 +379,15 @@ int ArgCheck(int argc){
 	}
 
 	return NOERRORS;
+}
+
+bool IsUnnecessarySymbolForCBFL(const MyString *SomeString, const int SomeStringElement){
+
+	if (ispunct(*(SomeString->PtrOnStartOfString + SomeStringElement)) || 
+		isdigit(*(SomeString->PtrOnStartOfString + SomeStringElement)) || 
+		   (int)*(SomeString->PtrOnStartOfString + SomeStringElement)   == -85)
+		return true;
+
+	return false;
+
 }
