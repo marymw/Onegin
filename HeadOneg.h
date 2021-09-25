@@ -2,30 +2,40 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <assert.h>
-#define DEBAG 1
+
 #define DEBUG 1
+
+enum Errors {
+	NOERRORS,      //0
+	NOINPUTFILE,   //1
+	NOOUTPUTFILE,  //2
+	TOOMANYARGS    //3
+};
 
 
 /* ЕВГЕНИЙ ОНЕГИН */
 
 struct MyString {
-	char *PtrOnStartOfString;
-	size_t   LenOfString;
-};//надо инициализировать??
+	char   *PtrOnStartOfString;
+	size_t         LenOfString;
+};
 
-void PrintGreetings       ();
-int  ReadFromFile         (char **buffer_ptr, char* NameOfFile);
-int  DecomposeToIndex     (MyString** Index_ptr, char **buffer_ptr);
-int  GetNumberOfStrings   (char *buffer);
-void PrintFile            (MyString* Index,int NumberOfStrings);
-void PrintSeparator       ();
-void PrintBuffer          (char *buffer);
-int  CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVoid);
-int  CompareByLastLetters (const void* OneStringVoid, const void* AnotherStringVoid);
-void swap                 (MyString *Index, int i, int j);
-void Myqsort              (MyString *Index, int left, int right, int(*comparator)(const void *, const void *));
-int  GetSizeOfFile        (FILE* FilePtr);
-void FreeMemory           (MyString ** Index_ptr, char **buffer_ptr);
-int  DeleteEmptyStrings   (char *buffer, int NumberOfSymbols);
+void  PrintGreetings       ();
+void  ReadFromFile         (char **buffer_ptr, char* NameOfFile);
+void  PrintFile            (MyString* Index,int NumberOfStrings);
+void  PrintSeparator       (FILE *OutputFilePtr);
+void  PrintBuffer          (char *buffer);
+void  swap                 (MyString *Index, int i, int j);
+void  Myqsort              (MyString *Index, int left, int right, int(*comparator)(const void *, const void *));
+void  PrintGoodBye         ();
+void  PrintBufferToFile    (FILE*  OutputFilePtr, char *buffer);
+void  PrintToFile          (FILE*  OutputFilePtr, MyString *Index, int NumberOfStrings);
+int   DecomposeToIndex     (MyString** Index_ptr, char **buffer_ptr);
+int   GetNumberOfStrings   (char *buffer);
+int   CompareByFirstLetters(const void* OneStringVoid, const void* AnotherStringVoid);
+int   CompareByLastLetters (const void* OneStringVoid, const void* AnotherStringVoid);
+int   GetSizeOfFile        (FILE* FilePtr);
+int   CloseOutputFile      (FILE*  OutputFilePtr);
+int   ArgCheck             (int argc);
+FILE *OpenOutputFile       (char* NameOfOutputFile);
 
-//int DeleteEmptyStrings(char *buffer, int NumberOfSymbols);
