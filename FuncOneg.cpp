@@ -1,4 +1,5 @@
 #include "NewOneg.h"
+#include <ctype.h>
 
 void ReadFromFile(char **buffer_ptr, char* NameOfFile){			//читает из файла и записывает в буффер
 
@@ -39,7 +40,7 @@ void PrintSeparator(FILE *OutputFilePtr){						//печатает раздели
 	}
 }
 
-void PrintFile(MyString* Index, int NumberOfStrings){			//печатает массив Index, index это массив структур
+void PrintFile(MyString* Index, const int NumberOfStrings){			//печатает массив Index, index это массив структур
 
 	DEBUG_PRINTF("начала работу функция PrintFile\n");
 
@@ -127,7 +128,7 @@ int DecomposeToIndex(MyString** Index_ptr, char **buffer_ptr){	//пробежи�
 	return NumberOfStrings;
 }
 
-int GetNumberOfStrings(char *buffer){ //определяет сколько ненулевых строк в буфере
+int GetNumberOfStrings(const char *buffer){ //определяет сколько ненулевых строк в буфере
 
 	DEBUG_PRINTF("1)Запущена функция GetNumberOfStrings\n");
 
@@ -259,9 +260,7 @@ int CompareByLastLetters(const void* OneStringVoid, const void* AnotherStringVoi
 
 }
 
-
-//норм мейби
-void PrintBuffer(char *buffer){//печатает буффер
+void PrintBuffer(const char *buffer){//печатает буффер в терминал
 
 	if (buffer == nullptr){
 		printf("buffer is empty.\n");
@@ -287,7 +286,7 @@ void Myqsort(MyString *Index, int left, int right, int(*comparator)(const void *
 	Myqsort(Index, last + 1, right, comparator);
 }
 //const
-void swap(MyString *Index, int i, int j) {
+void swap(MyString *Index, const int i, const int j) {
 	MyString temp = {};
 
 	temp = Index[i];
@@ -296,7 +295,7 @@ void swap(MyString *Index, int i, int j) {
 }
 
 
-void PrintToFile(FILE*  OutputFilePtr, MyString *Index, int NumberOfStrings){//печатает индекс в файл
+void PrintToFile(FILE*  OutputFilePtr, MyString *Index, const int NumberOfStrings){//печатает индекс в файл
 
 	assert(Index);
 
@@ -321,7 +320,7 @@ void PrintGoodBye(){
 	printf("Я всё. Тут мои полномочия всё.\n");
 }
 
-void PrintBufferToFile(FILE*  OutputFilePtr, char *buffer){
+void PrintBufferToFile(FILE*  OutputFilePtr, const char *buffer){
 	if (buffer == nullptr){
 		printf("buffer is empty.\n");
 		return;
@@ -358,5 +357,5 @@ int ArgCheck(int argc){
 			return TOOMANYARGS;
 	}
 
-	return 0;
+	return NOERRORS;
 }
