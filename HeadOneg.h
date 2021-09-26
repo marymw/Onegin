@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 #define DEBUG_PRINTF(string) printf(string)
